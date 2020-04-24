@@ -9,6 +9,7 @@ class MDD:
         self.agent = agent
         self.depth = depth
         self.level = {}
+        self.mdd = []
 
         
         
@@ -66,3 +67,11 @@ class MDD:
             
         return bfs_tree
                         
+    def get_start(self):
+        return self.start
+    
+    def get_goal(self):
+        return self.goal
+    
+    def get_depth(self):
+        return self.depth

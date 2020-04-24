@@ -1,4 +1,5 @@
 import time as timer
+import itertools
 from ict import ICT
 from mdd import MDD
 from single_agent_planner import compute_heuristics, a_star, get_sum_of_cost
@@ -19,14 +20,14 @@ class ICTSSolver(object):
         self.goals = goals
         self.num_of_agents = len(goals)
         
-        self.ict = self.generate_ict()
-
         self.CPU_time  = 0
 
         # compute heuristics for the low-level search
         self.heuristics = []
         for goal in self.goals:
             self.heuristics.append(compute_heuristics(my_map, goal))
+        
+        self.ict = self.generate_ict()
 
     
     def find_solution(self):
@@ -42,11 +43,10 @@ class ICTSSolver(object):
             node_to_expand = open_list[0]
             node_cost = node_to_expand['cost']
             
-            agent_paths = self.find_agent_paths(node_cost, mdd_list)
+            agent_paths = self.find_agent_paths(node_cost)
             
             if agent_paths:
                 break
-                return agent_paths
             else:
                 self.ict.expand_node(node_to_expand)
             
@@ -69,10 +69,10 @@ class ICTSSolver(object):
         
         for cost in path_costs:
             cost_ind = path_costs.index(cost)
-            mdd = MDD(self.my_map, self.starts[cost_ind], self.goals[cost_ind], cost)
+            mdd = MDD(self.my_map, self.starts[cost_ind], self.goals[cost_ind], cost_ind, cost)
             mdds_generated.append(mdd)
             
-        return self.find_solution_joint_mdd(mdds_generated)
+        return self.find_mdd_solution(mdds_generated)
                 
     
     def generate_ict(self):
@@ -82,11 +82,64 @@ class ICTSSolver(object):
         for agent in range(self.num_of_agents):
             optimal_paths.append(a_star(self.my_map, self.starts[agent], self.goals[agent], 
                                         self.heuristics[agent], agent, []))
-        
+            
         for path in optimal_paths:
             if not path:
                 break
-            optimal_costs.append(max(len(path)))
+            optimal_costs.append(len(path))
         
-        ict = ICT(self.my_map, self.starts, self.goals, optimal_costs)
+        return ICT(self.my_map, self.starts, self.goals, optimal_costs)
+        
+    def find_mdd_solution(self, mdds_generated):
+        mdd_start = []
+        mdd_depth = []
+        for mdd in mdds_generated:
+            mdd_start.append(mdd.get_start())
+            mdd_depth.append(mdd.get_depth())
+        
+        visited = set()
+        mdd_start_nodes = (tuple(mdd_start), 0)
+        
+        solution, visited = self.mdd_dfs(mdds_generated, mdd_start_nodes, visited, max(mdd_depth))
+        return False
+    
+    def mdd_dfs(self, mdds_generated, nodes, visited, max_depth):
+        is_goal = False
+        if (nodes[0] in visited) or (nodes[1] > max_depth):
+            return [], visited
+        
+        visited.add(nodes)
+        for mdd in mdds_generated:
+            node = nodes[mdds_generated.index(mdd)]
+            if (mdd.get_depth() <= node[1]) and (mdd.get_goal()==node):
+                is_goal = True
+                
+        if is_goal:
+            return [nodes], visited
+        
+        joint_children = self.get_joint_children(mdds_generated, nodes)
+        
+        solution_path = [nodes]
+        for child_loc in joint_children:
+            child = (child_loc, nodes[1]+1)
+            solution, visited = self.mdd_dfs(mdds_generated, child, visited, max_depth)
+            if solution:
+                solution_path.extend(solution)
+                return solution_path, visited
+        return [], visited
+        
+    def get_joint_children(self, mdds, nodes):
+        children = []
+        for node in nodes:
+            mdd = mdds[nodes.index(node)]
+            if (mdd.goal == node[0]) and (mdd.depth == nodes[1]):
+                children.append(mdd.goal)
+                continue
+            node_children = mdd.mdd[node]
+            node_children_location = [child[0] for child in node_children]
+            children.append(node_children_location)
+        
+        joint_children = list(itertools.product(*children))
+        return joint_children
+            
         
