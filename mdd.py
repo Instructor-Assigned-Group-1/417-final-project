@@ -9,7 +9,7 @@ class MDD:
         self.agent = agent
         self.depth = depth
         self.level = {}
-        self.mdd = []
+        self.mdd = self.build_mdd(my_map)
 
         
         
@@ -17,8 +17,14 @@ class MDD:
         bfs_tree = self.build_bfs_tree(my_map, self.start, self.goal, self.depth)
         goal_depth = (self.goal, self.depth)
         
-        if not bfs_tree[goal_depth]:
-            return None
+        #print(bfs_tree)
+        #print(goal_depth)
+        #print(bfs_tree[((1,2),1)])
+        #print(bfs_tree[goal_depth])
+        
+        #if not bfs_tree[goal_depth]:
+        #    return None
+        
         
         mdd = {}
         mdd_trim = []
@@ -37,7 +43,7 @@ class MDD:
             for node in neighbor:
                 self.level[node[1]].append(node[0])
                 
-        self.mdd = mdd
+        return mdd
         
         
     def build_bfs_tree(self, my_map, start, goal, max_depth):
@@ -45,15 +51,22 @@ class MDD:
         bfs_open.append((start, 0))
         bfs_tree = {}
         bfs_visited = set()
+        #print(bfs_open)
+        ii=0
         while bfs_open:
+            #print(ii)
+            #print(bfs_open)
+            ii = ii+1
             location, depth = bfs_open.pop(0)
             
             if (location,depth) in bfs_visited:
                 continue
             
+            bfs_visited.add((location,depth))
+            
             x, y = location[0], location[1]
             possible_location = [(x,y+1),(x,y-1),(x+1,y),(x-1,y),(x,y)]
-            
+            #print(possible_location)
             for loc in possible_location:
                 if my_map[loc[0]][loc[1]]:
                     continue
@@ -62,9 +75,10 @@ class MDD:
                 if valid_child[1] <= max_depth:
                     bfs_tree[valid_child] = (location, depth)
                     if not valid_child in bfs_visited:
-                        bfs_visited.add(valid_child)
+                        #bfs_visited.add(valid_child)
                         bfs_open.append(valid_child)
-            
+            #print(bfs_open)
+        #print(bfs_tree)
         return bfs_tree
                         
     def get_start(self):
@@ -75,3 +89,6 @@ class MDD:
     
     def get_depth(self):
         return self.depth
+    
+    def get_mdd(self):
+        return self.mdd

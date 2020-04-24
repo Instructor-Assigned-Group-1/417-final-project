@@ -32,9 +32,6 @@ class ICTSSolver(object):
     
     def find_solution(self):
         """ Finds paths for all agents from their start locations to their goal locations."""
-        result = []
-        expanded_nodes = 0
-        mdd_list = {}
         open_list = self.ict.get_open_list()
         
         start_time = timer.time()
@@ -71,7 +68,7 @@ class ICTSSolver(object):
             cost_ind = path_costs.index(cost)
             mdd = MDD(self.my_map, self.starts[cost_ind], self.goals[cost_ind], cost_ind, cost)
             mdds_generated.append(mdd)
-            
+        
         return self.find_mdd_solution(mdds_generated)
                 
     
@@ -110,8 +107,8 @@ class ICTSSolver(object):
         
         visited.add(nodes)
         for mdd in mdds_generated:
-            node = nodes[mdds_generated.index(mdd)]
-            if (mdd.get_depth() <= node[1]) and (mdd.get_goal()==node):
+            node = nodes[0][mdds_generated.index(mdd)]
+            if (mdd.get_depth() <= nodes[1]) and (mdd.get_goal()==node):
                 is_goal = True
                 
         if is_goal:
@@ -130,8 +127,8 @@ class ICTSSolver(object):
         
     def get_joint_children(self, mdds, nodes):
         children = []
-        for node in nodes:
-            mdd = mdds[nodes.index(node)]
+        for node in nodes[0]:
+            mdd = mdds[nodes[0].index(node)]
             if (mdd.goal == node[0]) and (mdd.depth == nodes[1]):
                 children.append(mdd.goal)
                 continue
