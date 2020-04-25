@@ -98,7 +98,7 @@ class ICTSSolver(object):
         for mdd in mdds_generated:
             mdd_start.append(mdd.get_start())
             mdd_depth.append(mdd.get_depth())
-        
+
         visited = set()
         mdd_start_nodes = (tuple(mdd_start), 0)
         
@@ -132,16 +132,21 @@ class ICTSSolver(object):
         
     def get_joint_children(self, mdds, nodes):
         children = []
+
         for node in nodes[0]:
-            mdd = mdds[nodes[0].index(node)]
-            if (mdd.goal == node[0]) and (mdd.depth == nodes[1]):
-                children.append(mdd.goal)
+            mdd_obj = mdds[nodes[0].index(node)]
+            mdd = mdd_obj.get_mdd()
+
+            if (mdd_obj.goal == node) and (mdd_obj.depth == nodes[1]):
+                children.append(mdd_obj.goal)
                 continue
-            node_children = mdd.mdd[node]
+
+            node_children = [mdd[(node, nodes[1])]]
             node_children_location = [child[0] for child in node_children]
             children.append(node_children_location)
         
         joint_children = list(itertools.product(*children))
+
         return joint_children
             
     def determine_cost_limit(self):

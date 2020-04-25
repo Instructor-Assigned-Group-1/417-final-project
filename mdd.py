@@ -40,7 +40,7 @@ class MDD:
             else:
                 for parent in bfs_tree[node]:
                     mdd_trim.append((parent, node))
-                
+                    
         return mdd
         
         
