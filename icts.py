@@ -28,6 +28,7 @@ class ICTSSolver(object):
             self.heuristics.append(compute_heuristics(my_map, goal))
         
         self.ict = self.generate_ict()
+        self.cost_limit = self.determine_cost_limit()
 
     
     def find_solution(self):
@@ -39,6 +40,10 @@ class ICTSSolver(object):
         while open_list:
             node_to_expand = open_list[0]
             node_cost = node_to_expand['cost']
+            
+            if sum(node_cost) > self.cost_limit:
+                self.ict.pop_node()
+                continue
             
             agent_paths = self.find_agent_paths(node_cost)
             
@@ -139,4 +144,15 @@ class ICTSSolver(object):
         joint_children = list(itertools.product(*children))
         return joint_children
             
+    def determine_cost_limit(self):
+        open_spaces = 0
+        cost_limit = 0
         
+        for row in self.my_map:
+            for space in row:
+                if not space:
+                    open_spaces = open_spaces+1
+                    
+        cost_limit = sum([(agent+1)*open_spaces for agent in range(self.num_of_agents)])
+        
+        return cost_limit

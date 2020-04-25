@@ -13,22 +13,22 @@ class ICT:
         
         self.open_list = []
         self.open_list.append(self.root)
-        self.closed_list = set(init_cost)
+        self.closed_list = set([tuple(init_cost)])
         
         
     def push_node(self, node):
-        heapq.heappush(self.open_list, node)
+        self.open_list.append(node)
 
 
     def pop_node(self):
-        _, _, _, curr = heapq.heappop(self.open_list)
-        return curr
+        return self.open_list.pop(0)
     
     def add_open_node(self, node):
         # Check if node in closed list
-        if not (node['cost'] in self.closed_list):
+        node_cost = tuple(node['cost'])
+        if not (node_cost in self.closed_list):
             self.open_list.append(node)
-            self.closed_list.add(node['cost'])
+            self.closed_list.add(node_cost)
             
     def expand_node(self, node):
         for cost in node['cost']:
